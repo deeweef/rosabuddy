@@ -15,7 +15,7 @@
 	<description>Logg for rosacea symptomer</description>
 
 	<properties>
-		<java.version>14</java.version>
+		<java.version>11</java.version>
 		<spring-boot-admin.version>2.2.3</spring-boot-admin.version>
 		<spring-cloud.version>Hoxton.SR6</spring-cloud.version>
 	</properties>
