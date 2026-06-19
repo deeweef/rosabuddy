@@ -500,6 +500,45 @@
       opacity: 0.4;
     }
 
+    /* ── GAME PICKER ── */
+    .game-picker {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+    }
+
+    .game-tile {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.6rem;
+      background: rgba(0,0,0,0.03);
+      border: 1.5px solid rgba(201,150,45,0.25);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      font-family: 'Lora', serif;
+      font-size: 0.75rem;
+      color: var(--text-mid);
+      user-select: none;
+      text-align: left;
+      width: 100%;
+    }
+
+    .game-tile:hover {
+      background: rgba(201,150,45,0.12);
+      border-color: var(--gold);
+    }
+
+    .game-tile.active {
+      background: var(--wood-dark);
+      border-color: var(--gold);
+      color: var(--gold-pale);
+    }
+
+    .game-tile-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .game-tile-name { font-style: italic; line-height: 1.2; }
+
     /* ── DIVIDER ── */
     .ornament-divider {
       display: flex;
@@ -552,43 +591,30 @@
               Spiller nå
             </div>
 
-            <!--
-              TO CHANGE THE GAME:
-              • Replace the emoji and title text below
-              • OR set a src on the <img> tag and remove the placeholder div
-            -->
             <div class="game-box-art" id="gameBoxArt" title="Spillet som spilles nå">
-              <!-- Option A: image
-              <img src="path/to/boxart.jpg" alt="Terraforming Mars">
-              -->
-              <!-- Option B: placeholder (default) -->
               <div class="game-box-art-content">
-                <span class="game-icon">🌍</span>
-                <span class="game-box-title">Terraforming<br>Mars</span>
+                <span class="game-icon" id="gameIcon">🌍</span>
+                <span class="game-box-title" id="gameBoxTitle">Terraforming<br>Mars</span>
               </div>
             </div>
 
             <div class="game-name" id="gameName">Terraforming Mars</div>
 
-            <div class="game-meta-row">
+            <div class="game-meta-row" id="gameMeta">
               <span>2–5 spillere</span>
               <span aria-hidden="true">·</span>
               <span>120–180 min</span>
             </div>
 
-            <div class="game-tags">
-              <span class="tag" id="roundBadge">Runde 3</span>
+            <div class="game-tags" id="gameTags">
               <span class="tag">Strategi</span>
               <span class="tag">Euro</span>
             </div>
 
             <div class="ornament-divider" aria-hidden="true">&#10022;</div>
 
-            <p style="font-style:italic; color:var(--wood-light); font-size:0.82rem; text-align:center; line-height:1.6;">
-              Endre <code style="font-size:0.72rem; background:rgba(0,0,0,0.06); padding:0.1rem 0.3rem; border-radius:2px;">id="gameName"</code>
-              og innholdet i <code style="font-size:0.72rem; background:rgba(0,0,0,0.06); padding:0.1rem 0.3rem; border-radius:2px;">#gameBoxArt</code>
-              for å oppdatere spillet.
-            </p>
+            <!-- Game picker — edit the GAMES array in the <script> below -->
+            <div class="game-picker" id="gamePicker"></div>
           </div>
         </div>
       </div>
@@ -712,6 +738,53 @@
     <div>Spilhelg med gutta</div>
     <div class="die-row" aria-hidden="true">⚀ ⚁ ⚂ ⚃ ⚄ ⚅</div>
   </footer>
+
+  <script>
+    // ── GAME LIST ────────────────────────────────────────────────────
+    // Add, remove, or reorder entries here to control the picker.
+    // tags: shown as small badges; players/time: shown in the meta row.
+    const GAMES = [
+      { icon: '🌍', name: 'Terraforming Mars', players: '2–5', time: '120–180 min', tags: ['Strategi', 'Euro'] },
+      { icon: '🏝️', name: 'Catan',             players: '3–4', time: '60–120 min',  tags: ['Strategi', 'Handel'] },
+      { icon: '🚂', name: 'Ticket to Ride',    players: '2–5', time: '45–75 min',   tags: ['Familie', 'Rute'] },
+      { icon: '🏰', name: 'Carcassonne',       players: '2–5', time: '35–45 min',   tags: ['Familie', 'Brikker'] },
+      { icon: '🦅', name: 'Wingspan',          players: '1–5', time: '40–70 min',   tags: ['Strategi', 'Kort'] },
+      { icon: '🌿', name: 'Pandemic',          players: '2–4', time: '45–60 min',   tags: ['Kooperativ'] },
+      { icon: '💎', name: 'Splendor',          players: '2–4', time: '30–60 min',   tags: ['Familie', 'Motor'] },
+      { icon: '🏛️', name: '7 Wonders',        players: '2–7', time: '30–45 min',   tags: ['Strategi', 'Kort'] },
+    ];
+    // ─────────────────────────────────────────────────────────────────
+
+    function formatBoxTitle(name) {
+      const words = name.split(' ');
+      if (words.length === 1) return name;
+      const mid = Math.ceil(words.length / 2);
+      return words.slice(0, mid).join(' ') + '<br>' + words.slice(mid).join(' ');
+    }
+
+    function selectGame(index) {
+      const g = GAMES[index];
+      document.getElementById('gameIcon').textContent     = g.icon;
+      document.getElementById('gameBoxTitle').innerHTML   = formatBoxTitle(g.name);
+      document.getElementById('gameName').textContent     = g.name;
+      document.getElementById('gameMeta').innerHTML       =
+        `<span>${g.players} spillere</span><span aria-hidden="true">·</span><span>${g.time}</span>`;
+      document.getElementById('gameTags').innerHTML       =
+        g.tags.map(t => `<span class="tag">${t}</span>`).join('');
+      document.querySelectorAll('.game-tile').forEach((el, i) =>
+        el.classList.toggle('active', i === index));
+    }
+
+    // Render picker tiles
+    const picker = document.getElementById('gamePicker');
+    GAMES.forEach((g, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'game-tile' + (i === 0 ? ' active' : '');
+      btn.innerHTML = `<span class="game-tile-icon">${g.icon}</span><span class="game-tile-name">${g.name}</span>`;
+      btn.addEventListener('click', () => selectGame(i));
+      picker.appendChild(btn);
+    });
+  </script>
 
 </body>
 </html>
