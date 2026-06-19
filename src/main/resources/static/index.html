@@ -500,44 +500,90 @@
       opacity: 0.4;
     }
 
-    /* ── GAME PICKER ── */
-    .game-picker {
+    /* ── GAME SEARCH ── */
+    .game-search-wrap {
       width: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 0.45rem;
     }
 
-    .game-tile {
+    .game-search-input {
+      width: 100%;
+      padding: 0.55rem 0.8rem;
+      background: var(--parchment-lt);
+      border: 1.5px solid var(--gold);
+      font-family: 'Lora', serif;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-dark);
+      outline: none;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .game-search-input::placeholder { color: var(--wood-light); opacity: 0.8; }
+    .game-search-input:focus { border-color: var(--gold-light); background: #fffdf5; }
+
+    .game-search-list {
+      width: 100%;
+      max-height: 195px;
+      overflow-y: auto;
+      border: 1.5px solid rgba(201,150,45,0.35);
+      background: var(--parchment-lt);
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+
+    .game-search-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.45rem 0.6rem;
-      background: rgba(0,0,0,0.03);
-      border: 1.5px solid rgba(201,150,45,0.25);
+      padding: 0.38rem 0.65rem;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-      font-family: 'Lora', serif;
-      font-size: 0.75rem;
-      color: var(--text-mid);
-      user-select: none;
-      text-align: left;
+      border: none;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      background: none;
       width: 100%;
+      text-align: left;
+      font-family: 'Lora', serif;
+      transition: background 0.1s;
     }
 
-    .game-tile:hover {
-      background: rgba(201,150,45,0.12);
-      border-color: var(--gold);
+    .game-search-item:last-child { border-bottom: none; }
+    .game-search-item:hover  { background: rgba(201,150,45,0.13); }
+    .game-search-item.active { background: rgba(201,150,45,0.22); }
+
+    .game-search-icon    { font-size: 1rem; flex-shrink: 0; }
+    .game-search-name    { flex: 1; font-style: italic; font-size: 0.78rem; color: var(--text-dark); }
+    .game-search-players { font-size: 0.66rem; color: var(--wood-light); white-space: nowrap; }
+
+    .game-desc {
+      font-style: italic;
+      font-size: 0.78rem;
+      color: var(--wood-light);
+      text-align: center;
+      line-height: 1.5;
+      min-height: 2.2rem;
     }
 
-    .game-tile.active {
-      background: var(--wood-dark);
-      border-color: var(--gold);
-      color: var(--gold-pale);
+    .game-owner-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.3rem;
     }
 
-    .game-tile-icon { font-size: 1.1rem; flex-shrink: 0; }
-    .game-tile-name { font-style: italic; line-height: 1.2; }
+    .owner-tag {
+      background: rgba(74,44,23,0.07);
+      color: var(--wood-mid);
+      border: 1px solid rgba(74,44,23,0.18);
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.45rem;
+    }
 
     /* ── DIVIDER ── */
     .ornament-divider {
@@ -591,7 +637,7 @@
               Spiller nå
             </div>
 
-            <div class="game-box-art" id="gameBoxArt" title="Spillet som spilles nå">
+            <div class="game-box-art" id="gameBoxArt">
               <div class="game-box-art-content">
                 <span class="game-icon" id="gameIcon">🌍</span>
                 <span class="game-box-title" id="gameBoxTitle">Terraforming<br>Mars</span>
@@ -601,20 +647,23 @@
             <div class="game-name" id="gameName">Terraforming Mars</div>
 
             <div class="game-meta-row" id="gameMeta">
-              <span>2–5 spillere</span>
+              <span>1–5 spillere</span>
               <span aria-hidden="true">·</span>
-              <span>120–180 min</span>
+              <span>2 timer</span>
             </div>
 
-            <div class="game-tags" id="gameTags">
-              <span class="tag">Strategi</span>
-              <span class="tag">Euro</span>
-            </div>
+            <div class="game-desc" id="gameDesc">Konkurrerende selskaper terraformer Mars.</div>
+
+            <div class="game-owner-row" id="gameOwner"></div>
 
             <div class="ornament-divider" aria-hidden="true">&#10022;</div>
 
-            <!-- Game picker — edit the GAMES array in the <script> below -->
-            <div class="game-picker" id="gamePicker"></div>
+            <!-- Searchable list — edit GAMES in the <script> below -->
+            <div class="game-search-wrap">
+              <input type="text" id="gameSearch" class="game-search-input"
+                     placeholder="Søk etter spill…" autocomplete="off">
+              <div id="gameList" class="game-search-list" role="listbox"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -740,50 +789,128 @@
   </footer>
 
   <script>
-    // ── GAME LIST ────────────────────────────────────────────────────
-    // Add, remove, or reorder entries here to control the picker.
-    // tags: shown as small badges; players/time: shown in the meta row.
+    // ── GAME LIST ─────────────────────────────────────────────────────
+    // Source: https://docs.google.com/spreadsheets/d/1wpsK9gvFhKftFiEFGx9sg3X-mPBbkIu9VdXDpwJIe04
     const GAMES = [
-      { icon: '🌍', name: 'Terraforming Mars', players: '2–5', time: '120–180 min', tags: ['Strategi', 'Euro'] },
-      { icon: '🏝️', name: 'Catan',             players: '3–4', time: '60–120 min',  tags: ['Strategi', 'Handel'] },
-      { icon: '🚂', name: 'Ticket to Ride',    players: '2–5', time: '45–75 min',   tags: ['Familie', 'Rute'] },
-      { icon: '🏰', name: 'Carcassonne',       players: '2–5', time: '35–45 min',   tags: ['Familie', 'Brikker'] },
-      { icon: '🦅', name: 'Wingspan',          players: '1–5', time: '40–70 min',   tags: ['Strategi', 'Kort'] },
-      { icon: '🌿', name: 'Pandemic',          players: '2–4', time: '45–60 min',   tags: ['Kooperativ'] },
-      { icon: '💎', name: 'Splendor',          players: '2–4', time: '30–60 min',   tags: ['Familie', 'Motor'] },
-      { icon: '🏛️', name: '7 Wonders',        players: '2–7', time: '30–45 min',   tags: ['Strategi', 'Kort'] },
+      { icon:'🚂', name:'1870',                            players:'2–6',  time:'6 timer',      desc:'Bygg jernbane, kjøp og selg aksjer i jernbaneselskap.',             owner:'Kenneth' },
+      { icon:'🗺️', name:'7th Continent',                  players:'1–4',  time:'5–1000 min',   desc:'Choose your own adventure-brettspill. Lang kampanje som lagres.',  owner:'Martin' },
+      { icon:'🏛️', name:'Advanced Civilization',          players:'2–8',  time:'8–12 timer',   desc:'Det klassiske sivilisasjonsbyggespillet.',                          owner:'Kenneth' },
+      { icon:'⚔️', name:'Age of Empires III',             players:'2–5',  time:'2 timer',      desc:'Utforsk, kjemp, vinn.',                                            owner:'Lars Erik' },
+      { icon:'🌾', name:'Agricola',                       players:'1–5',  time:'2 timer',      desc:'Jordbruk i middelalderen. Strategi og ressursstyring.',             owner:'Aasmund, Lars Erik, Geir' },
+      { icon:'👻', name:'Arkham Horror',                  players:'1–8',  time:'4–6 timer',    desc:'Kjempe mot Cthulhu-monstre. Horror, samarbeid, utforskning.',       owner:'Aasmund' },
+      { icon:'✈️', name:'Axis & Allies',                 players:'2–5',  time:'3–4 timer',    desc:'2. verdenskrig strategispill.',                                     owner:'Lars Erik' },
+      { icon:'🤠', name:'Bang!',                          players:'3–8',  time:'30 min',       desc:'Western kortspill.',                                               owner:'Martin, Stian, Dag, Aasmund, Geir, Skule' },
+      { icon:'🚀', name:'Battlestar Galactica',           players:'3–6',  time:'3 timer',      desc:'Samarbeidspill med forræder. Sci-fi basert på tv-serien.',          owner:'Kenneth, Skule' },
+      { icon:'🏚️', name:'Betrayal at House on the Hill',  players:'3–6',  time:'1 time',       desc:'Utforsk spøkelseshus. Horror, samarbeid, forræder.',               owner:'Aasmund' },
+      { icon:'⚙️', name:'Brass: Birmingham',              players:'2–4',  time:'1–2 timer',    desc:'Økonomisk strategispill fra den industrielle revolusjonen.',        owner:'Kenneth' },
+      { icon:'🏰', name:'Britannia',                      players:'3–5',  time:'4 timer+',     desc:'Erobringene av de britiske øyer.',                                  owner:'Kenneth' },
+      { icon:'🌊', name:'Captain Sonar',                  players:'2–8',  time:'45–60 min',    desc:'Styr en ubåt i kamp mot en annen ubåt.',                           owner:'Aasmund' },
+      { icon:'🏙️', name:'Carcassonne',                   players:'2–5',  time:'30–60 min',    desc:'Bygge områder og byer.',                                           owner:'Geir, Skule' },
+      { icon:'🏯', name:'Castles of Burgundy',            players:'2–4',  time:'',             desc:'',                                                                 owner:'Martin' },
+      { icon:'🔨', name:'Caylus',                         players:'2–5',  time:'2 timer',      desc:'Arbeiderplassering — bli den beste mesterbygger.',                  owner:'Kenneth' },
+      { icon:'🃏', name:'Citadels',                       players:'2–8',  time:'30–60 min',    desc:'Bygge by, velge roller.',                                          owner:'Geir' },
+      { icon:'🎭', name:'Coup',                           players:'2–10', time:'15 min',       desc:'Slå ut de andre med skjulte roller. Bløff fritt.',                 owner:'Kenneth' },
+      { icon:'⚔️', name:'Cutthroat Caverns',             players:'3–6',  time:'90 min',       desc:'Hvem blir eventyreren som kommer seg levende ut av monsterhula?',   owner:'Kenneth' },
+      { icon:'❄️', name:'Dead of Winter',                players:'2–5',  time:'',             desc:'',                                                                 owner:'Martin' },
+      { icon:'❄️', name:'Dead of Winter: The Long Night', players:'2–5',  time:'',             desc:'',                                                                 owner:'Martin' },
+      { icon:'🗡️', name:'Descent',                       players:'2–5',  time:'4 timer',      desc:'Utforskning av huler. Samarbeid mot en GM.',                       owner:'Aasmund' },
+      { icon:'🤝', name:'Diplomacy',                      players:'2–7',  time:'6 timer',      desc:'Klassisk diplomatispill om første verdenskrig.',                   owner:'Kenneth' },
+      { icon:'👑', name:'Dominion',                       players:'2–4',  time:'30 min',       desc:'Bygge kongedømmer ved hjelp av kortbygging.',                      owner:'Kenneth, Dag, Martin' },
+      { icon:'🏎️', name:'Downforce',                     players:'2–6',  time:'30 min',       desc:'Kjøp racerbiler og kjør løp.',                                     owner:'Dag' },
+      { icon:'🏜️', name:'Dune Imperium',                 players:'1–4',  time:'1–2 timer',    desc:'Politikk, penger og krig i Dune-universet.',                       owner:'Dag' },
+      { icon:'🏜️', name:'Dune Imperium Uprising',        players:'1–6',  time:'1–2 timer',    desc:'Revidert utgave av Dune Imperium.',                                owner:'Kenneth' },
+      { icon:'🌌', name:'Eclipse',                        players:'2–9',  time:'1–3 timer',    desc:'Raskere romstrategi à la Twilight Imperium.',                      owner:'Martin, Skule' },
+      { icon:'🏘️', name:'Elasund',                       players:'2–4',  time:'1–2 timer',    desc:'Bygg den fineste byen på Catan.',                                  owner:'Martin' },
+      { icon:'🌊', name:'Eufrat & Tigris',               players:'2–4',  time:'1,5 time',     desc:'Territoriebygging med brikker.',                                   owner:'Kenneth' },
+      { icon:'🦑', name:'Feed the Kraken',               players:'5–11', time:'45–90 min',    desc:'Skjulte faksjoner kjemper om å styre skuta. Rask BSG-variant.',    owner:'Kenneth' },
+      { icon:'🚴', name:'Flamme Rouge',                  players:'2–4',  time:'30–45 min',    desc:'Racingspill for sykkellag à la Tour de France.',                   owner:'Dag' },
+      { icon:'🏎️', name:'Formula D',                    players:'2–10', time:'1 time',       desc:'Racingspill.',                                                     owner:'Dag' },
+      { icon:'⚔️', name:'Game of Thrones',              players:'3–6',  time:'3 timer',      desc:'',                                                                 owner:'Martin' },
+      { icon:'🗡️', name:'Garibaldi',                    players:'2–6',  time:'1 time',       desc:'1 spiller er Garibaldi, de andre prøver å fange ham.',             owner:'Aasmund' },
+      { icon:'🗡️', name:'Gloomhaven',                   players:'1–4',  time:'1–2 timer',    desc:'Fantasy samarbeidspill med dungeons og kampanjer.',                owner:'Kenneth, Martin' },
+      { icon:'🏝️', name:'Isle of Skye',                 players:'2–5',  time:'30–50 min',    desc:'',                                                                 owner:'Aasmund' },
+      { icon:'🔪', name:'Kill Doctor Lucky',             players:'3–7',  time:'45 min',       desc:'Omvendt av Clue — drep doktor Lucky uten å bli sett.',             owner:'Aasmund' },
+      { icon:'🦖', name:'King of New York',              players:'2–6',  time:'40 min',       desc:'Spill Kaijumonster som river ned New York.',                       owner:'Kenneth' },
+      { icon:'🏛️', name:'Kremlin',                      players:'2–6',  time:'1,5–3 timer',  desc:'Backstabbing i politbyrået i Sovjetunionen.',                      owner:'Kenneth' },
+      { icon:'🧙', name:'Lords of Waterdeep',           players:'2–5',  time:'1 time',       desc:'Strategispill: få eventyrere til å utføre oppdrag for deg.',       owner:'Kenneth, Martin' },
+      { icon:'👑', name:'Louis XIV',                    players:'2–4',  time:'1,5–2 timer',  desc:'Vinn innflytelse i hoffet til Ludvig XIV.',                        owner:'Aasmund, Stian' },
+      { icon:'💌', name:'Love Letter',                  players:'2–4',  time:'20 min',       desc:'Bløff og manipuler for å sende brev til prinsessen.',              owner:'Kenneth, Dag' },
+      { icon:'🏚️', name:'Mansions of Madness',          players:'2–5',  time:'2 timer',      desc:'Kjempe mot Cthulhu-monstre. Raskere enn Arkham Horror.',           owner:'Aasmund' },
+      { icon:'🧪', name:'Pandemic',                     players:'2–4',  time:'1 time',       desc:'Samarbeidspill om å bekjempe pandemier.',                          owner:'Kenneth' },
+      { icon:'🏔️', name:'Pax Pamir',                   players:'1–5',  time:'45–120 min',   desc:'Strategispill om kontrollen av Afghanistan på 1800-tallet.',      owner:'Kenneth' },
+      { icon:'🌴', name:'Puerto Rico',                  players:'2–5',  time:'1,5 time',     desc:'Handel fra kolonier i den nye verden.',                            owner:'Aasmund, Kenneth, Stian, Lars Erik, Skule, Geir' },
+      { icon:'🌌', name:'Race for the Galaxy',          players:'2–4',  time:'1 time',       desc:'Sivilisasjonsbygging med kort.',                                   owner:'Kenneth, Martin' },
+      { icon:'🕵️', name:'The Resistance',              players:'5–10', time:'30 min',       desc:'Utfør oppdrag for motstanden — det er spioner blant dere.',        owner:'Kenneth' },
+      { icon:'🤖', name:'RoboRally',                    players:'2–8',  time:'2 timer',      desc:'Programmer roboter som kjemper på et fabrikkgulv.',               owner:'Aasmund, Kenneth, Lars Erik, Skule' },
+      { icon:'🦊', name:'Root',                         players:'2–4',  time:'60–90 min',    desc:'Taktisk spill med asymmetriske faksjoner av dyr.',                 owner:'Kenneth' },
+      { icon:'🏝️', name:'Settlers of Catan',           players:'2–6',  time:'2–3 timer',    desc:'Det klassiske handelsspillet.',                                    owner:'Aasmund, Martin, Skule, Geir' },
+      { icon:'⛩️', name:'Shogun',                       players:'2–5',  time:'4 timer',      desc:'Krig i Japan for å bli Shogun.',                                   owner:'Kenneth' },
+      { icon:'🧚', name:'Small World',                  players:'2–6',  time:'1–2 timer',    desc:'Lett og kjapt erobringspill. Fantasy.',                            owner:'Martin, Geir' },
+      { icon:'🌑', name:'Small World Underground',      players:'2–5',  time:'1 time',       desc:'Lett og kjapt erobringspill under bakken. Fantasy.',              owner:'Kenneth, Martin' },
+      { icon:'🧙', name:'Talisman',                     players:'2–6',  time:'90 min',       desc:'Bygg karakter, drep monstre.',                                     owner:'Geir' },
+      { icon:'🌍', name:'Terra Mystica',                players:'2–5',  time:'60–150 min',   desc:'Områdekontroll med fantasy-raser.',                                owner:'Kenneth' },
+      { icon:'🌍', name:'Terraforming Mars',            players:'1–5',  time:'2 timer',      desc:'Konkurrerende selskaper terraformer Mars.',                        owner:'Kenneth, Stian, Martin, Skule' },
+      { icon:'🚂', name:'Ticket to Ride',              players:'2–5',  time:'30–60 min',    desc:'',                                                                 owner:'Aasmund, Geir' },
+      { icon:'🌌', name:'Twilight Imperium 4',         players:'2–6',  time:'4–7 timer',    desc:'Strategisk romkrigspill med rollevalgsmekanikk.',                  owner:'Aasmund, Martin' },
+      { icon:'🗿', name:"Tzolk'in",                     players:'2–4',  time:'90 min',       desc:'Worker placement for å bygge sivilasjon og hedre gudene.',         owner:'Martin' },
+      { icon:'🧩', name:'Ubongo',                       players:'2–4',  time:'30 min',       desc:'Abstrakt familiespill — løs nøtter.',                              owner:'Kenneth, Geir' },
+      { icon:'🚢', name:'Unfathomable',                 players:'3–6',  time:'2–4 timer',    desc:'Samarbeid med forrædere på en dampbåt med kultister.',             owner:'Aasmund' },
+      { icon:'🏺', name:'Ur: 1830 BC',                 players:'3–6',  time:'3 timer',      desc:'Sivilisasjonsspill om fordeling av vann i Ur.',                    owner:'Kenneth' },
+      { icon:'⚔️', name:'Vindication',                players:'2–5',  time:'45–150 min',   desc:'',                                                                 owner:'Martin' },
+      { icon:'🦅', name:'Wingspan',                    players:'1–5',  time:'40–70 min',    desc:'Bygg et tablå av fugler som bygger et fuglereservat.',             owner:'Kenneth' },
     ];
-    // ─────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────
+
+    let activeIndex = GAMES.findIndex(g => g.name === 'Terraforming Mars');
+    if (activeIndex < 0) activeIndex = 0;
 
     function formatBoxTitle(name) {
       const words = name.split(' ');
-      if (words.length === 1) return name;
+      if (words.length <= 2) return name;
       const mid = Math.ceil(words.length / 2);
       return words.slice(0, mid).join(' ') + '<br>' + words.slice(mid).join(' ');
     }
 
     function selectGame(index) {
+      activeIndex = index;
       const g = GAMES[index];
-      document.getElementById('gameIcon').textContent     = g.icon;
-      document.getElementById('gameBoxTitle').innerHTML   = formatBoxTitle(g.name);
-      document.getElementById('gameName').textContent     = g.name;
-      document.getElementById('gameMeta').innerHTML       =
+      document.getElementById('gameIcon').textContent   = g.icon;
+      document.getElementById('gameBoxTitle').innerHTML = formatBoxTitle(g.name);
+      document.getElementById('gameName').textContent   = g.name;
+      document.getElementById('gameMeta').innerHTML     =
         `<span>${g.players} spillere</span><span aria-hidden="true">·</span><span>${g.time}</span>`;
-      document.getElementById('gameTags').innerHTML       =
-        g.tags.map(t => `<span class="tag">${t}</span>`).join('');
-      document.querySelectorAll('.game-tile').forEach((el, i) =>
-        el.classList.toggle('active', i === index));
+      document.getElementById('gameDesc').textContent   = g.desc;
+      document.getElementById('gameOwner').innerHTML    =
+        g.owner.split(',').map(o => `<span class="owner-tag">${o.trim()}</span>`).join('');
+      document.querySelectorAll('.game-search-item').forEach(el =>
+        el.classList.toggle('active', Number(el.dataset.index) === index));
     }
 
-    // Render picker tiles
-    const picker = document.getElementById('gamePicker');
-    GAMES.forEach((g, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'game-tile' + (i === 0 ? ' active' : '');
-      btn.innerHTML = `<span class="game-tile-icon">${g.icon}</span><span class="game-tile-name">${g.name}</span>`;
-      btn.addEventListener('click', () => selectGame(i));
-      picker.appendChild(btn);
-    });
+    function renderList(filter) {
+      const list = document.getElementById('gameList');
+      const q = filter.trim().toLowerCase();
+      list.innerHTML = '';
+      GAMES.forEach((g, i) => {
+        if (q && !g.name.toLowerCase().includes(q)) return;
+        const btn = document.createElement('button');
+        btn.className = 'game-search-item' + (i === activeIndex ? ' active' : '');
+        btn.dataset.index = i;
+        btn.innerHTML =
+          `<span class="game-search-icon">${g.icon}</span>` +
+          `<span class="game-search-name">${g.name}</span>` +
+          `<span class="game-search-players">${g.players}</span>`;
+        btn.addEventListener('click', () => {
+          selectGame(i);
+          document.getElementById('gameSearch').value = '';
+          renderList('');
+        });
+        list.appendChild(btn);
+      });
+    }
+
+    document.getElementById('gameSearch').addEventListener('input', e => renderList(e.target.value));
+    renderList('');
+    selectGame(activeIndex);
   </script>
 
 </body>
