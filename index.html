@@ -747,6 +747,7 @@
               </p>
             </div>
           </div>
+          <div id="playlistContainer"></div>
         </div>
       </div>
     </section>
@@ -1720,8 +1721,8 @@
     }
 
     function renderPlaylist(game) {
-      const body = document.getElementById('spotifyBody');
-      if (!game.playlist || !game.playlist.length) return;
+      const container = document.getElementById('playlistContainer');
+      if (!game.playlist || !game.playlist.length) { container.innerHTML = ''; return; }
       const items = game.playlist.map((s, i) => {
         const q = encodeURIComponent(s.a + ' ' + s.t);
         return `<a class="playlist-item" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">
@@ -1730,7 +1731,7 @@
           <span class="playlist-artist">${s.a}</span>
         </a>`;
       }).join('');
-      body.innerHTML = `
+      container.innerHTML = `
         <p class="playlist-game-label">Temamusikk for ${game.name}</p>
         <div class="playlist-list">${items}</div>`;
     }
