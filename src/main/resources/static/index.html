@@ -747,7 +747,7 @@
               loading="lazy">
             </iframe>
           -->
-          <a id="spotifyLink" href="https://open.spotify.com/search/board%20game%20ambient" target="_blank" rel="noopener" class="spotify-open-btn">
+          <a id="spotifyLink" href="https://open.spotify.com/search/board%20game/playlists" target="_blank" rel="noopener" class="spotify-open-btn">
             <svg viewBox="0 0 168 168" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="84" cy="84" r="84" fill="#1DB954"/>
               <path d="M120.6 116.3c-1.6 2.6-5 3.4-7.5 1.8-20.6-12.6-46.5-15.4-77-8.4-2.9.7-5.9-1.1-6.6-4-.7-2.9 1.1-5.9 4-6.6 33.4-7.6 62.1-4.3 85.3 9.7 2.5 1.5 3.3 4.9 1.8 7.5zm10.3-22.9c-2 3.2-6.2 4.2-9.4 2.2-23.6-14.5-59.5-18.7-87.4-10.2-3.6 1.1-7.4-.9-8.5-4.5-1.1-3.6.9-7.4 4.5-8.5 31.8-9.7 71.4-5 98.6 11.6 3.2 2 4.2 6.2 2.2 9.4zm.9-23.8c-28.3-16.8-75-18.4-102.1-10.1-4.3 1.3-8.8-1.1-10.1-5.4-1.3-4.3 1.1-8.8 5.4-10.1 31-9.4 82.5-7.6 115.1 11.6 3.9 2.3 5.2 7.3 2.9 11.2-2.3 3.9-7.3 5.2-11.2 2.8z" fill="white"/>
@@ -1730,10 +1730,9 @@
     function renderPlaylist(game) {
       const container = document.getElementById('playlistContainer');
       if (!game.playlist || !game.playlist.length) { container.innerHTML = ''; return; }
-      const seed = game.playlist[0];
-      const q = encodeURIComponent(seed.a + ' ' + seed.t);
-      document.getElementById('spotifyLink').href = `https://open.spotify.com/search/${q}`;
-      document.getElementById('spotifyLinkLabel').textContent = `Spill til ${game.name} på Spotify`;
+      const q = encodeURIComponent(game.name);
+      document.getElementById('spotifyLink').href = `https://open.spotify.com/search/${q}/playlists`;
+      document.getElementById('spotifyLinkLabel').textContent = `Finn spilleliste for ${game.name} på Spotify`;
       const items = game.playlist.map((s, i) => {
         const q = encodeURIComponent(s.a + ' ' + s.t);
         return `<a class="playlist-item" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">
