@@ -754,7 +754,6 @@
             </svg>
             <span id="spotifyLinkLabel">Åpne i Spotify</span>
           </a>
-          <div id="playlistContainer"></div>
         </div>
       </div>
     </section>
@@ -1797,35 +1796,11 @@
     };
 
     function renderPlaylist(game) {
-      const container = document.getElementById('playlistContainer');
       const pid = SPOTIFY_PLAYLISTS[game.name];
       if (pid) {
         document.getElementById('spotifyLink').href = `https://open.spotify.com/playlist/${pid}`;
         document.getElementById('spotifyLinkLabel').textContent = `Åpne spilleliste for ${game.name}`;
-        container.innerHTML = `<iframe
-          style="border-radius:8px;margin-top:0.75rem"
-          src="https://open.spotify.com/embed/playlist/${pid}?utm_source=generator"
-          width="100%" height="352" frameBorder="0"
-          allowfullscreen=""
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"></iframe>`;
-        return;
       }
-      if (!game.playlist || !game.playlist.length) { container.innerHTML = ''; return; }
-      const q = encodeURIComponent(game.name);
-      document.getElementById('spotifyLink').href = `https://open.spotify.com/search/${q}/playlists`;
-      document.getElementById('spotifyLinkLabel').textContent = `Finn spilleliste for ${game.name} på Spotify`;
-      const items = game.playlist.map((s, i) => {
-        const q = encodeURIComponent(s.a + ' ' + s.t);
-        return `<a class="playlist-item" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">
-          <span class="playlist-num">${i + 1}</span>
-          <span class="playlist-title">${s.t}</span>
-          <span class="playlist-artist">${s.a}</span>
-        </a>`;
-      }).join('');
-      container.innerHTML = `
-        <p class="playlist-game-label">Temamusikk for ${game.name}</p>
-        <div class="playlist-list">${items}</div>`;
     }
 
     function renderList(filter) {
